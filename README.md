@@ -93,9 +93,9 @@ from llm_rsa.core import RSA
 rsa = RSA(
     task_prompt=task_prompt,
     agg_prompt=agg_prompt, 
-    M=4,
-    k=2,
-    loops=3
+    N=4,
+    K=2,
+    loops=2
 )
 
 # Run the aggregation
@@ -104,50 +104,80 @@ print(f"Generated {len(rsa.history)} total candidates across {rsa.loops} loops")
 print('llm response: \n', results[-1].response)
 ```
 
-    Generated 12 total candidates across 3 loops
+<style>
+    progress { appearance: none; border: none; border-radius: 4px; width: 300px;
+        height: 20px; vertical-align: middle; background: #e0e0e0; }
+&#10;    progress::-webkit-progress-bar { background: #e0e0e0; border-radius: 4px; }
+    progress::-webkit-progress-value { background: #2196F3; border-radius: 4px; }
+    progress::-moz-progress-bar { background: #2196F3; border-radius: 4px; }
+&#10;    progress:not([value]) {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px); }
+&#10;    progress.progress-bar-interrupted::-webkit-progress-value { background: #F44336; }
+    progress.progress-bar-interrupted::-moz-progress-value { background: #F44336; }
+    progress.progress-bar-interrupted::-webkit-progress-bar { background: #F44336; }
+    progress.progress-bar-interrupted::-moz-progress-bar { background: #F44336; }
+    progress.progress-bar-interrupted { background: #F44336; }    
+&#10;    table.fastprogress { border-collapse: collapse; margin: 1em 0; font-size: 0.9em; }
+    table.fastprogress th, table.fastprogress td { padding: 8px 12px; border: 1px solid #ddd; text-align: left; }
+    table.fastprogress thead tr { background: #f8f9fa; font-weight: bold; }
+    table.fastprogress tbody tr:nth-of-type(even) { background: #f8f9fa; }
+</style>
+
+``` html
+<div>
+<progress max="2" value="2"></progress> 100.00% [2/2 00:20&lt;00:00... Loop 2]</div>
+```
+
+    Generated 8 total candidates across 2 loops
     llm response: 
      ### Analysis of Candidate Reasoning
 
-    Both **Candidate 1** and **Candidate 2** provide identical logical conclusions and correctly identify the fallacy.
-    *   They both recognize that $27 is the total amount the guests spent ($30 - $3 refund).
-    *   They both correctly point out that the $2 held by the bellboy is a *subset* of that $27, not an additional amount to be added to it.
-    *   They both demonstrate that the correct way to reach the original $30 is to add the $3 refund to the $27 spent, rather than adding the $2 tip to the $27 spent.
+    Both **Candidate 1** and **Candidate 2** provide excellent, accurate explanations of the "missing dollar" riddle. 
 
-    The candidates effectively "debunked" the riddle's misdirection, which relies on the psychological trick of adding two numbers that do not belong together in a balance sheet.
+    1.  **Candidate 1 Analysis:** This candidate correctly identifies the logical fallacy of adding the bellboy's kept money to the amount spent by the guests. They provide a clear "Follow the Money" breakdown showing that the $30 is distributed as $25 (hotel), $2 (bellboy), and $3 (guests). They correctly state that the $27 spent by the guests *already includes* the $2 held by the bellboy.
+    2.  **Candidate 2 Analysis:** This candidate identifies the "false premise" and "incorrect logic" of the riddle. Like Candidate 1, they break down the $30 correctly and explain that the riddle incorrectly adds a "cost" ($27) to a "profit" ($2) instead of adding the "cost" ($27) to the "refund" ($3).
+
+    Both candidates conclude that no money is actually missing and that the riddle is based on an arithmetic trick.
 
     ---
 
-    ### Step-by-Step Reasoning and Solution
+    ### Synthetic Correct Solution
 
-    To solve the mystery of the "missing dollar," we must track the $30 carefully and distinguish between **Assets** (money held) and **Expenses** (money spent).
+    The "missing dollar" is a result of a misleading calculation. To resolve the mystery, we must track the money accurately using two different perspectives: **where the money is now** and **the total amount spent vs. kept.**
 
-    **1. Track the $30 Total**
-    At the end of the transaction, the $30 is distributed as follows:
-    *   **$25** is in the hotel's register (the actual price of the room).
-    *   **$2** is in the bellboy's pocket (the stolen tip).
-    *   **$3** is in the guests' pockets ($1 each).
-    *   **Total: $25 + $2 + $3 = $30.**
+    #### 1. Where is the money now? (The $30 Breakdown)
+    The original $30 can be accounted for by looking at who currently holds the cash:
+    *   **$25:** Held by the hotel (the actual cost of the room).
+    *   **$2:** Held by the bellboy (the amount he kept).
+    *   **$3:** Held by the three guests ($1 each in their pockets).
+    *   **Total: $25 + $2 + $3 = $30.** 
     Nothing is missing.
 
-    **2. Analyze the Guest Perspective (The $27)**
-    The riddle says: "Each person paid $9, total $27." This is correct. Let's look at what happened to that $27:
-    *   **$25** went to the hotel for the room.
-    *   **$2** went to the bellboy as a tip.
-    *   **Total: $25 + $2 = $27.**
-    The $2 is already *inside* the $27.
+    #### 2. The Fallacy in the Riddle
+    The riddle states: *"Each person paid $9 (total $27), plus the bellboy has $2, which equals $29."*
+    This is logically incorrect because it **double-counts** the bellboy's money. 
 
-    **3. Identify the Logical Fallacy**
-    The riddle's error is the statement: *"Each person paid $9 (total $27), plus the bellboy has $2, which equals $29."*
-    This is an accounting error. You cannot add the bellboy's $2 to the $27 because the bellboy's $2 is **part of** the $27. 
+    *   **The Net Payment:** The guests spent a total of **$27**. 
+    *   **The Destination of that payment:** Of that $27, **$25** went to the hotel and **$2** went to the bellboy.
+    *   **The Calculation:** Adding the $2 to the $27 is nonsensical because the $2 is *already part* of the $27. 
 
-    To reconcile the total to $30, you must add the money the guests **kept** (the $3 refund) to the money they **spent** ($27):
-    *   **$27 (Spent) + $3 (Refunded) = $30.**
-
-    **Conclusion:**
-    The "extra dollar" does not exist. The riddle creates an illusion by adding a component of an expense ($2) to the total expense ($27), rather than adding the remaining cash on hand ($3) to the total expense.
+    To reach the original $30, you must add the money the guests **kept** to the money they **spent**:
+    **$27 (Spent) + $3 (Returned to them) = $30.**
 
     ### Final Answer
-    The dollar is not missing. The mistake is in the calculation: it adds the bellboy's $2 to the $27 spent, even though the $2 is already included in the $27. The correct calculation is $27 (spent) + $3 (returned to guests) = $30.
+    The dollar did not go anywhere. The riddle creates an illusion by adding the bellboy's $2 to the $27 spent, when it should be subtracting the $2 from the $27 to find the hotel’s $25, or adding the $3 refund to the $27 to find the original $30.
+
+``` python
+from pydantic import BaseModel
+class Answer(BaseModel):
+    answer: str
+    confidence: float
+
+prompt, response = rsa.aggregate(response_model=Answer)
+print(response)
+```
+
+    {"answer":"The mystery of the missing dollar is caused by a logical fallacy known as misdirection. The riddle incorrectly adds the bellboy's $2 to the $27 paid by the guests, creating a mathematically irrelevant number ($29). To solve the puzzle, we simply need to track the original $30 using two balance methods:\n\n1. The Distribution Method (Where is the money now?):\n- $25 is in the hotel's register.\n- $2 is in the bellboy's pocket.\n- $3 is in the guests' pockets ($1 each).\n- Total: $25 + $2 + $3 = $30. \nEverything is accounted for.\n\n2. The Net Expenditure Method (What did the guests pay?):\nThe guests paid $30 and got $3 back, meaning they spent exactly $27. \n- $25 of that $27 went to the hotel room cost.\n- $2 of that $27 went to the bellboy as a tip.\n- Total: $25 + $2 = $27.\n\nThe error in the riddle is adding the $2 to the $27. Because the $2 is already part of the $27, adding them together double-counts the bellboy's tip. To get back to the original $30, you must add the $27 spent to the $3 refund ($27 + $3 = $30). There is no missing dollar.","confidence":1.0}
 
 ``` python
 from litellm import completion
@@ -164,28 +194,34 @@ print(baseline_answer)
 ```
 
     === BASELINE (single call) ===
-    The extra dollar didn't go anywhere; the confusion comes from **adding** the bellboy's tip to the guests' expenses instead of **subtracting** it.
+    This is a classic riddle that relies on a **logical fallacy**—specifically, an error in how the numbers are added together at the end.
 
-    Here is the correct breakdown of the math:
+    The "lost" dollar doesn't exist; it only appears to be missing because the math at the end of the story adds two numbers that should actually be **subtracted**.
 
-    ### 1. The Total Spent
-    Each person paid $9, for a total of **$27**.
+    Here is the correct breakdown of the money:
 
-    ### 2. Where that $27 is currently located
-    Of that $27:
-    *   **$25** is in the cash register (the actual price of the room).
-    *   **$2** is in the bellboy’s pocket.
-    *   **Total: $27.**
+    ### 1. Follow the Money
+    Instead of adding the bellboy's tip to the guests' payment, look at where the original $30 is at the very end:
+    *   **$25** is in the hotel cash register.
+    *   **$2** is in the bellboy's pocket.
+    *   **$3** was returned to the guests ($1 each).
+    *   **Total: $25 + $2 + $3 = $30.** (The math is perfect).
 
-    ### 3. The Logical Fallacy
-    The riddle tricks you by saying: *"$27 (paid) + $2 (bellboy) = $29."* 
+    ### 2. The Flaw in the Riddle
+    The riddle says: *"Each person paid $9 (total $27), plus the bellboy has $2, which equals $29."* 
 
-    This is an error in logic because the **$2 is already included in the $27**. You are essentially adding the bellboy's tip twice. 
+    **The error is adding the $2 to the $27.** 
+    The $27 that the guests spent **already includes** the $2 that the bellboy took.
 
-    **The correct math should be:**
-    *   **Total Spent ($27) + Total Refunded ($3) = $30**
-    *   OR
-    *   **Total Spent ($27) - Bellboy's Tip ($2) = Room Price ($25)**
+    Think of it this way:
+    *   The guests paid **$27**.
+    *   Where did that $27 go? **$25** went to the hotel and **$2** went to the bellboy.
+    *   To reach the original $30, you should add the **$3** they got back, not the $2 the bellboy kept.
+
+    **The correct equation is:**
+    $27 (Paid) + $3 (Refund) = $30. 
+    *OR*
+    $27 (Paid) - $2 (Bellboy's Tip) = $25 (Room Cost).
 
 ### Configuration Options
 
@@ -193,17 +229,17 @@ print(baseline_answer)
 |----|----|----|
 | `task_prompt` | (required) | The main task/question to solve |
 | `model` | `'openrouter/google/gemini-3-flash-preview'` | LLM model to use (any litellm-compatible model) |
-| `M` | 8 | Number of candidates generated per loop |
-| `k` | 4 | Number of candidates sampled for each aggregation |
-| `loops` | 3 | Number of aggregation iterations |
+| `N` | 4 | Population size (candidates per loop) |
+| `K` | 3 | Number of candidates to aggregate |
+| `loops` | 2 | Number of aggregation iterations |
 | `temperature` | 1.0 | LLM sampling temperature |
 | `n_workers` | 4 | Parallel workers for LLM calls |
 | `agg_prompt` | (auto) | Custom aggregation prompt (optional) |
 
 ### How RSA Works
 
-1.  **Loop 0**: Generate M independent responses to the task prompt
-2.  **Loop 1+**: For each of M new candidates, randomly sample k
+1.  **Loop 0**: Generate N independent responses to the task prompt
+2.  **Loop 1+**: For each of N new candidates, randomly sample K
     previous candidates and ask the LLM to aggregate them into an
     improved answer
 3.  **Repeat** for the specified number of loops

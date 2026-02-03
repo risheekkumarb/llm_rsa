@@ -43,12 +43,14 @@ class RSA:
 
 # %% ../nbs/00_core.ipynb #3c39e9e6
 @patch
-def _call_llm(self:RSA, prompt):
+def _call_llm(self:RSA, prompt, **kwargs):
     "Call the LLM with the given prompt and return the response content"
     response = completion(
         model=self.model,
         messages=[{"role": "user", "content": prompt}],
         temperature=self.temperature,
+        num_retries=3,
+        **kwargs
     )
     return response.choices[0].message.content
 
@@ -97,11 +99,13 @@ def run(self:RSA):
         self.history.extend(pool)
     return pool
 
-# %% ../nbs/00_core.ipynb #b4edf71c
+# %% ../nbs/00_core.ipynb #72cb9b61
 @patch
-def aggregate(self:RSA):
-    "Final aggregation one LLM call to aggregate all the final loop candidates"
+def aggregate(self:RSA, agg_prompt=None, response_model=None):
+    "Final aggregation: one LLM call to aggregate all final loop candidates, with optional structured output"
+    agg_prompt = agg_prompt or self.agg_prompt
     candidates = self.history.filter(lambda x: x.loop_id==(self.loops-1))
     responses = '\n'.join(f"---- Candidate {i+1} ----\n{c.response}" for i, c in enumerate(candidates))
-    prompt = f"{self.agg_prompt}\n{self.task_prompt}\n\nCANDIDATE ANSWERS:\n{responses}\n\nProvide the best aggregated answer:"
-    return prompt, self._call_llm(prompt)
+    prompt = f"{agg_prompt}\n{self.task_prompt}\n\nCANDIDATE ANSWERS:\n{responses}\n\nProvide the best aggregated answer:"
+    result = self._call_llm(prompt, **({'response_format': response_model} if response_model else {}))
+    return prompt, result
