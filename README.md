@@ -107,6 +107,51 @@ print(f"Generated {len(rsa.history)} total candidates across {rsa.loops} loops")
 print('llm response: \n', results[-1].response)
 ```
 
+    Generated 12 total candidates across 3 loops
+    llm response: 
+     ### Analysis of Candidate Reasoning
+
+    Both **Candidate 1** and **Candidate 2** provide identical logical conclusions and correctly identify the fallacy.
+    *   They both recognize that $27 is the total amount the guests spent ($30 - $3 refund).
+    *   They both correctly point out that the $2 held by the bellboy is a *subset* of that $27, not an additional amount to be added to it.
+    *   They both demonstrate that the correct way to reach the original $30 is to add the $3 refund to the $27 spent, rather than adding the $2 tip to the $27 spent.
+
+    The candidates effectively "debunked" the riddle's misdirection, which relies on the psychological trick of adding two numbers that do not belong together in a balance sheet.
+
+    ---
+
+    ### Step-by-Step Reasoning and Solution
+
+    To solve the mystery of the "missing dollar," we must track the $30 carefully and distinguish between **Assets** (money held) and **Expenses** (money spent).
+
+    **1. Track the $30 Total**
+    At the end of the transaction, the $30 is distributed as follows:
+    *   **$25** is in the hotel's register (the actual price of the room).
+    *   **$2** is in the bellboy's pocket (the stolen tip).
+    *   **$3** is in the guests' pockets ($1 each).
+    *   **Total: $25 + $2 + $3 = $30.**
+    Nothing is missing.
+
+    **2. Analyze the Guest Perspective (The $27)**
+    The riddle says: "Each person paid $9, total $27." This is correct. Let's look at what happened to that $27:
+    *   **$25** went to the hotel for the room.
+    *   **$2** went to the bellboy as a tip.
+    *   **Total: $25 + $2 = $27.**
+    The $2 is already *inside* the $27.
+
+    **3. Identify the Logical Fallacy**
+    The riddle's error is the statement: *"Each person paid $9 (total $27), plus the bellboy has $2, which equals $29."*
+    This is an accounting error. You cannot add the bellboy's $2 to the $27 because the bellboy's $2 is **part of** the $27. 
+
+    To reconcile the total to $30, you must add the money the guests **kept** (the $3 refund) to the money they **spent** ($27):
+    *   **$27 (Spent) + $3 (Refunded) = $30.**
+
+    **Conclusion:**
+    The "extra dollar" does not exist. The riddle creates an illusion by adding a component of an expense ($2) to the total expense ($27), rather than adding the remaining cash on hand ($3) to the total expense.
+
+    ### Final Answer
+    The dollar is not missing. The mistake is in the calculation: it adds the bellboy's $2 to the $27 spent, even though the $2 is already included in the $27. The correct calculation is $27 (spent) + $3 (returned to guests) = $30.
+
 ``` python
 from litellm import completion
 
@@ -120,6 +165,30 @@ baseline_answer = response.choices[0].message.content
 print("=== BASELINE (single call) ===")
 print(baseline_answer)
 ```
+
+    === BASELINE (single call) ===
+    The extra dollar didn't go anywhere; the confusion comes from **adding** the bellboy's tip to the guests' expenses instead of **subtracting** it.
+
+    Here is the correct breakdown of the math:
+
+    ### 1. The Total Spent
+    Each person paid $9, for a total of **$27**.
+
+    ### 2. Where that $27 is currently located
+    Of that $27:
+    *   **$25** is in the cash register (the actual price of the room).
+    *   **$2** is in the bellboy’s pocket.
+    *   **Total: $27.**
+
+    ### 3. The Logical Fallacy
+    The riddle tricks you by saying: *"$27 (paid) + $2 (bellboy) = $29."* 
+
+    This is an error in logic because the **$2 is already included in the $27**. You are essentially adding the bellboy's tip twice. 
+
+    **The correct math should be:**
+    *   **Total Spent ($27) + Total Refunded ($3) = $30**
+    *   OR
+    *   **Total Spent ($27) - Bellboy's Tip ($2) = Room Price ($25)**
 
 ### Configuration Options
 
