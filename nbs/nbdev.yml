@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "llm_rsa"
+  site-url: "https://risheekkumarb.github.io/llm_rsa"
+  description: "Recursive self aggregation"
+  repo-branch: main
+  repo-url: "https://github.com/risheekkumarb/llm_rsa"
