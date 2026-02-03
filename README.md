@@ -32,36 +32,33 @@ $ nbdev_prepare
 
 ### Installation
 
-Install latest from the GitHub \[repository\]\[repo\]:
+Install latest from the GitHub
+[repository](https://github.com/risheekkumarb/llm_rsa):
 
 ``` sh
 $ pip install git+https://github.com//.git
 ```
 
-or from \[conda\]\[conda\]
+or from [conda](https://anaconda.org/risheekkumarb/llm_rsa)
 
 ``` sh
 $ conda install -c  
 ```
 
-or from \[pypi\]\[pypi\]
+or from [pypi](https://pypi.org/project/llm_rsa)
 
 ``` sh
 $ pip install 
 ```
 
-\[repo\]: \[docs\]: https://.github.io// \[pypi\]:
-https://pypi.org/project// \[conda\]: https://anaconda.org//
-
 ### Documentation
 
 Documentation can be found hosted on this GitHub
-\[repository\]\[repo\]’s \[pages\]\[docs\]. Additionally you can find
-package manager specific guidelines on \[conda\]\[conda\] and
-\[pypi\]\[pypi\] respectively.
-
-\[repo\]: \[docs\]: https://.github.io// \[pypi\]:
-https://pypi.org/project// \[conda\]: https://anaconda.org//
+[repository](https://github.com/risheekkumarb/llm_rsa)’s
+[pages](https://risheekkumarb.github.io/llm_rsa/). Additionally you can
+find package manager specific guidelines on
+[conda](https://anaconda.org/risheekkumarb/llm_rsa) and
+[pypi](https://pypi.org/project/llm_rsa) respectively.
 
 ## How to use
 
