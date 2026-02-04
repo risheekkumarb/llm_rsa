@@ -1,0 +1,82 @@
+[
+  {
+    "objectID": "rsa_dspy.html",
+    "href": "rsa_dspy.html",
+    "title": "rsa_dspy",
+    "section": "",
+    "text": "source",
+    "crumbs": [
+      "rsa_dspy"
+    ]
+  },
+  {
+    "objectID": "rsa_dspy.html#configuration",
+    "href": "rsa_dspy.html#configuration",
+    "title": "rsa_dspy",
+    "section": "Configuration",
+    "text": "Configuration\nRSA-DSPy uses dspy for LLM calls. Configure your LM globally:\ndspy.configure(lm=dspy.LM('openrouter/google/gemini-3-flash-preview', temperature=1.0))\nSee DSPy’s LM documentation for supported providers.\n\ndspy.configure(lm=dspy.LM('openrouter/google/gemini-3-flash-preview', temperature=1.0, cache=False))\n\ncands = a._run_loop(loop_id=0)\ntest_eq(len(cands), a.N)\nassert all(c.response is not None for c in cands)\nassert cands[0].response != cands[1].response\n\n\ncands[0].response\n\n\nsource\n\nRSA.run\n\ndef run(\n    \n):\n\nRun the full RSA algorithm for the configured number of loops and return the final candidate pool\n\na = RSA(task_prompt='A bat and ball cost $1.10 total. The bat costs $1 more than the ball. How much does the ball cost?', solver=TaskSolver, aggregator=AggregateResponses, loops=2)\nresult = a.run()\nprint(f\"Final pool: {len(result)}, History: {len(a.history)}\")\n\n\nsource\n\n\nRSA.final_aggregate\n\ndef final_aggregate(\n    method:str='llm', signature:NoneType=None\n):\n\nFinal aggregation: one LLM call to aggregate all final loop candidates\n\n# Test 'llm' aggregation\nresult = a.final_aggregate(method='llm')\nassert isinstance(result, dspy.Prediction)\nassert len(result.response) &gt; 0\nprint(result)\n\n# Test 'random' aggregation\nresult = a.final_aggregate(method='random')\nassert isinstance(result, dspy.Prediction)\nassert len(result.response) &gt; 0",
+    "crumbs": [
+      "rsa_dspy"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "RSA - Recursive Self-Aggregation",
+    "section": "",
+    "text": "RSA implements Recursive Self-Aggregation, a technique for improving LLM responses by generating multiple candidate answers and iteratively aggregating them. The algorithm samples k candidates from a pool of M responses, asks the LLM to synthesize an improved answer, and repeats this process across multiple loops to converge on higher-quality outputs.",
+    "crumbs": [
+      "RSA - Recursive Self-Aggregation"
+    ]
+  },
+  {
+    "objectID": "index.html#developer-guide",
+    "href": "index.html#developer-guide",
+    "title": "RSA - Recursive Self-Aggregation",
+    "section": "Developer Guide",
+    "text": "Developer Guide\nIf you are new to using nbdev here are some useful pointers to get you started.\n\nInstall in Development mode\n# make sure  package is installed in development mode\n$ pip install -e .\n\n# make changes under nbs/ directory\n# ...\n\n# compile to have changes apply to \n$ nbdev_prepare",
+    "crumbs": [
+      "RSA - Recursive Self-Aggregation"
+    ]
+  },
+  {
+    "objectID": "index.html#usage",
+    "href": "index.html#usage",
+    "title": "RSA - Recursive Self-Aggregation",
+    "section": "Usage",
+    "text": "Usage\n\nInstallation\nInstall latest from the GitHub repository:\n$ pip install git+https://github.com//.git\nor from conda\n$ conda install -c  \nor from pypi\n$ pip install \n\n\nDocumentation\nDocumentation can be found hosted on this GitHub repository’s pages. Additionally you can find package manager specific guidelines on conda and pypi respectively.",
+    "crumbs": [
+      "RSA - Recursive Self-Aggregation"
+    ]
+  },
+  {
+    "objectID": "index.html#how-to-use",
+    "href": "index.html#how-to-use",
+    "title": "RSA - Recursive Self-Aggregation",
+    "section": "How to use",
+    "text": "How to use\n\nBasic Usage\nCreate an RSA instance with your task prompt and call it to run the aggregation:\n\ntask_prompt = '''Three people check into a hotel room that costs $30. They each contribute $10. \nLater, the manager realizes the room only costs $25 and gives $5 to the bellboy to return. \nThe bellboy keeps $2 and gives $1 back to each person. \nSo each person paid $9 (total $27), plus the bellboy has $2, which equals $29. \nWhere did the extra dollar go?'''\n\n\nagg_prompt = \"\"\"Below is a reasoning problem followed by several candidate solutions. \nYour job is to:\n1. Carefully analyze each candidate's reasoning step-by-step\n2. Identify which candidates make logical errors or arithmetic mistakes  \n3. Note which approaches lead to correct reasoning\n4. Synthesize the best reasoning into a single, clear, correct solution\n\nShow your work step-by-step, then state your final answer clearly.\"\"\"\n\n\nfrom llm_rsa.core import RSA\n\n# Create RSA instance with a reasoning task\nrsa = RSA(\n    task_prompt=task_prompt,\n    agg_prompt=agg_prompt, \n    N=4,\n    K=2,\n    loops=2\n)\n\n# Run the aggregation\nresults = rsa.run()\nprint(f\"Generated {len(rsa.history)} total candidates across {rsa.loops} loops\")\nprint('llm response: \\n', results[-1].response)\n\n\n\n\n\n 100.00% [2/2 00:20&lt;00:00... Loop 2]\n\n\n\n\n\n\n\n\nGenerated 8 total candidates across 2 loops\nllm response: \n ### Analysis of Candidate Reasoning\n\nBoth **Candidate 1** and **Candidate 2** provide excellent, accurate explanations of the \"missing dollar\" riddle. \n\n1.  **Candidate 1 Analysis:** This candidate correctly identifies the logical fallacy of adding the bellboy's kept money to the amount spent by the guests. They provide a clear \"Follow the Money\" breakdown showing that the $30 is distributed as $25 (hotel), $2 (bellboy), and $3 (guests). They correctly state that the $27 spent by the guests *already includes* the $2 held by the bellboy.\n2.  **Candidate 2 Analysis:** This candidate identifies the \"false premise\" and \"incorrect logic\" of the riddle. Like Candidate 1, they break down the $30 correctly and explain that the riddle incorrectly adds a \"cost\" ($27) to a \"profit\" ($2) instead of adding the \"cost\" ($27) to the \"refund\" ($3).\n\nBoth candidates conclude that no money is actually missing and that the riddle is based on an arithmetic trick.\n\n---\n\n### Synthetic Correct Solution\n\nThe \"missing dollar\" is a result of a misleading calculation. To resolve the mystery, we must track the money accurately using two different perspectives: **where the money is now** and **the total amount spent vs. kept.**\n\n#### 1. Where is the money now? (The $30 Breakdown)\nThe original $30 can be accounted for by looking at who currently holds the cash:\n*   **$25:** Held by the hotel (the actual cost of the room).\n*   **$2:** Held by the bellboy (the amount he kept).\n*   **$3:** Held by the three guests ($1 each in their pockets).\n*   **Total: $25 + $2 + $3 = $30.** \nNothing is missing.\n\n#### 2. The Fallacy in the Riddle\nThe riddle states: *\"Each person paid $9 (total $27), plus the bellboy has $2, which equals $29.\"*\nThis is logically incorrect because it **double-counts** the bellboy's money. \n\n*   **The Net Payment:** The guests spent a total of **$27**. \n*   **The Destination of that payment:** Of that $27, **$25** went to the hotel and **$2** went to the bellboy.\n*   **The Calculation:** Adding the $2 to the $27 is nonsensical because the $2 is *already part* of the $27. \n\nTo reach the original $30, you must add the money the guests **kept** to the money they **spent**:\n**$27 (Spent) + $3 (Returned to them) = $30.**\n\n### Final Answer\nThe dollar did not go anywhere. The riddle creates an illusion by adding the bellboy's $2 to the $27 spent, when it should be subtracting the $2 from the $27 to find the hotel’s $25, or adding the $3 refund to the $27 to find the original $30.\n\n\n\nfrom pydantic import BaseModel\nclass Answer(BaseModel):\n    answer: str\n    confidence: float\n\nprompt, response = rsa.aggregate(response_model=Answer)\nprint(response)\n\n{\"answer\":\"The mystery of the missing dollar is caused by a logical fallacy known as misdirection. The riddle incorrectly adds the bellboy's $2 to the $27 paid by the guests, creating a mathematically irrelevant number ($29). To solve the puzzle, we simply need to track the original $30 using two balance methods:\\n\\n1. The Distribution Method (Where is the money now?):\\n- $25 is in the hotel's register.\\n- $2 is in the bellboy's pocket.\\n- $3 is in the guests' pockets ($1 each).\\n- Total: $25 + $2 + $3 = $30. \\nEverything is accounted for.\\n\\n2. The Net Expenditure Method (What did the guests pay?):\\nThe guests paid $30 and got $3 back, meaning they spent exactly $27. \\n- $25 of that $27 went to the hotel room cost.\\n- $2 of that $27 went to the bellboy as a tip.\\n- Total: $25 + $2 = $27.\\n\\nThe error in the riddle is adding the $2 to the $27. Because the $2 is already part of the $27, adding them together double-counts the bellboy's tip. To get back to the original $30, you must add the $27 spent to the $3 refund ($27 + $3 = $30). There is no missing dollar.\",\"confidence\":1.0}\n\n\n\nfrom litellm import completion\n\n# Single direct call (baseline)\nresponse = completion(\n    model='openrouter/google/gemini-3-flash-preview',\n    messages=[{\"role\": \"user\", \"content\": task_prompt}],\n    temperature=1.0\n)\nbaseline_answer = response.choices[0].message.content\nprint(\"=== BASELINE (single call) ===\")\nprint(baseline_answer)\n\n=== BASELINE (single call) ===\nThis is a classic riddle that relies on a **logical fallacy**—specifically, an error in how the numbers are added together at the end.\n\nThe \"lost\" dollar doesn't exist; it only appears to be missing because the math at the end of the story adds two numbers that should actually be **subtracted**.\n\nHere is the correct breakdown of the money:\n\n### 1. Follow the Money\nInstead of adding the bellboy's tip to the guests' payment, look at where the original $30 is at the very end:\n*   **$25** is in the hotel cash register.\n*   **$2** is in the bellboy's pocket.\n*   **$3** was returned to the guests ($1 each).\n*   **Total: $25 + $2 + $3 = $30.** (The math is perfect).\n\n### 2. The Flaw in the Riddle\nThe riddle says: *\"Each person paid $9 (total $27), plus the bellboy has $2, which equals $29.\"* \n\n**The error is adding the $2 to the $27.** \nThe $27 that the guests spent **already includes** the $2 that the bellboy took.\n\nThink of it this way:\n*   The guests paid **$27**.\n*   Where did that $27 go? **$25** went to the hotel and **$2** went to the bellboy.\n*   To reach the original $30, you should add the **$3** they got back, not the $2 the bellboy kept.\n\n**The correct equation is:**\n$27 (Paid) + $3 (Refund) = $30. \n*OR*\n$27 (Paid) - $2 (Bellboy's Tip) = $25 (Room Cost).\n\n\n\n\nConfiguration Options\n\n\n\n\n\n\n\n\nParameter\nDefault\nDescription\n\n\n\n\ntask_prompt\n(required)\nThe main task/question to solve\n\n\nmodel\n'openrouter/google/gemini-3-flash-preview'\nLLM model to use (any litellm-compatible model)\n\n\nN\n4\nPopulation size (candidates per loop)\n\n\nK\n3\nNumber of candidates to aggregate\n\n\nloops\n2\nNumber of aggregation iterations\n\n\ntemperature\n1.0\nLLM sampling temperature\n\n\nn_workers\n4\nParallel workers for LLM calls\n\n\nagg_prompt\n(auto)\nCustom aggregation prompt (optional)\n\n\n\n\n\nHow RSA Works\n\nLoop 0: Generate N independent responses to the task prompt\nLoop 1+: For each of N new candidates, randomly sample K previous candidates and ask the LLM to aggregate them into an improved answer\nRepeat for the specified number of loops\nReturn the final pool of aggregated candidates\n\nThe history attribute stores all candidates across all loops, allowing you to trace the aggregation process.",
+    "crumbs": [
+      "RSA - Recursive Self-Aggregation"
+    ]
+  },
+  {
+    "objectID": "core.html",
+    "href": "core.html",
+    "title": "core",
+    "section": "",
+    "text": "source",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#configuration",
+    "href": "core.html#configuration",
+    "title": "core",
+    "section": "Configuration",
+    "text": "Configuration\nRSA uses litellm for LLM calls, which automatically reads API keys from environment variables:\n\nOPENAI_API_KEY for OpenAI models\nANTHROPIC_API_KEY for Anthropic models\n\nOPENROUTER_API_KEY for OpenRouter models\netc.\n\nYou can also set a custom endpoint globally:\nimport litellm\nlitellm.api_base = \"https://your-endpoint.com/v1\"\nSee litellm’s provider docs for the full list of supported providers and their environment variables.\n\nc1 = RSACandidate(id='c1', loop_id=0, prompt='test', response='Answer A')\nc2 = RSACandidate(id='c2', loop_id=0, prompt='test', response='Answer B')\n\nprint(a._build_agg_prompt([c1, c2]))\n\n\nsource\n\nRSA.get_prompts\n\ndef get_prompts(\n    loop_id, cands:NoneType=None\n):\n\nGenerate candidate prompts for a given loop: N initial candidates, or all C(n,K) combinations for aggregation\n\n# Test loop 0\ncands = a.get_prompts(loop_id=0)\ntest_eq(len(cands), a.N)\ntest_eq(cands[0].prompt, a.task_prompt)\n\n\n# Test loop 1+ (with prior candidates)\nprior = L(RSACandidate(id=str(uuid.uuid4()), loop_id=0, prompt='test', response=f'Answer {i}') for i in range(8))\ncands = a.get_prompts(loop_id=1, cands=prior)\ntest_eq(len(cands), a.N)\n\n\nprint(cands[0].prompt)\n\n\ncands = a._run_loop(loop_id=0)\ntest_eq(len(cands), a.N)\nassert all(c.response is not None for c in cands)\nassert cands[0].response != cands[1].response\n\n\nsource\n\n\nRSA.run\n\ndef run(\n    \n):\n\nRun the full RSA algorithm for the configured number of loops and return the final candidate pool\n\na = RSA(task_prompt='A bat and ball cost $1.10 total. The bat costs $1 more than the ball. How much does the ball cost?', loops=2)\nresult = a.run()\nprint(f\"Final pool: {len(result)}, History: {len(a.history)}\")\n\n\nsource\n\n\nRSA.aggregate\n\ndef aggregate(\n    method:str='llm', final_agg_prompt:NoneType=None, response_format:NoneType=None\n):\n\nFinal aggregation: one LLM call to aggregate all final loop candidates, with optional structured output\n\n# Test with custom aggregation prompt\ncustom_prompt = \"Combine these answers into one final answer:\"\nprompt, result = a.aggregate(final_agg_prompt=custom_prompt)\nassert custom_prompt in prompt\nassert isinstance(result, str)\nassert len(result) &gt; 0\n\n# Test with response_format (structured output)\nfrom pydantic import BaseModel\n\nclass Answer(BaseModel):\n    answer: str\n    confidence: float\n\nprompt, result = a.aggregate(response_format=Answer)\nassert isinstance(result, str)  # litellm returns JSON string\nprint(prompt, result)\n\n\n# Test 'llm' aggregation\nprompt, result = a.aggregate(method='llm')\nassert isinstance(prompt, str)\nassert isinstance(result, str)\nassert len(result) &gt; 0\nassert 'CANDIDATE ANSWERS' in prompt\n\n# Test 'random' aggregation\nprompt, result = a.aggregate(method='random')\ntest_eq(prompt, '')\nassert isinstance(result, str)\nassert len(result) &gt; 0\n\nhow can i improve mine?\n\n🤖Reply🤖\n🧠🧠🧠🧠🧠🧠🧠🧠🧠🧠🧠🧠🧠🧠\nHere are the key improvements to consider, roughly in order of impact:\n\nDifferent temperatures per phase — Use higher temperature (e.g., 1.0-1.2) for initial generation to maximize diversity, then lower temperature (e.g., 0.7) for aggregation steps where you want more focused synthesis.\nTracking diversity — The paper notes diversity should decrease over loops as errors get pruned. You could add a simple diversity metric (e.g., embedding similarity between candidates) to monitor this and potentially adjust parameters.\nSmarter candidate selection — Instead of random shuffle()[:N] for selecting which K-combinations to use, you could prioritize combinations that maximize diversity (picking candidates that are more different from each other).\nConfigurable aggregation prompt per loop — The paper suggests the aggregation task may benefit from different prompting strategies at different stages. You could allow agg_prompt to be a callable that takes loop_id.\nEarly stopping — If all candidates converge to very similar answers before loops is reached, you could stop early.\n\nWhich of these interests you most? I can help you think through the implementation details.",
+    "crumbs": [
+      "core"
+    ]
+  }
+]
