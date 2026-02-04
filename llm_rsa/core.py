@@ -10,6 +10,7 @@ from fastcore.all import *
 from fastcore.test import *
 from litellm import completion
 import random, uuid
+from math import comb
 from itertools import combinations
 from fastprogress import progress_bar
 
@@ -35,6 +36,7 @@ class RSA:
         n_workers:int=4  # Parallel workers
     ): 
         if not task_prompt: raise ValueError("task_prompt is required")
+        if comb(N, K) < N: raise ValueError(f"C({N},{K})={comb(N,K)} < N={N}; need C(N,K) >= N for aggregation loops")
         store_attr()
         if not history: self.history = L()
         if not self.agg_prompt: self.agg_prompt = """You are given question with training examples and a test input.\nYou are also provided several candidate solutions. Some candidates may be incorrect\nAggregate/consider all the candidates and use their help to produce the improved correct solution"""
@@ -56,7 +58,7 @@ def _call_llm(self:RSA, prompt, **kwargs):
 
 # %% ../nbs/00_core.ipynb #ef493c51
 @patch
-def _agg_prompt(self:RSA, candidates: list[RSACandidate]) -> str:
+def _build_agg_prompt(self:RSA, candidates: list[RSACandidate]) -> str:
     "Build an aggregation prompt combining the task prompt with candidate responses"
     parts = [
         self.agg_prompt,
@@ -73,18 +75,15 @@ def _agg_prompt(self:RSA, candidates: list[RSACandidate]) -> str:
 def get_prompts(self:RSA, loop_id, cands=None):
     "Generate candidate prompts for a given loop: N initial candidates, or all C(n,K) combinations for aggregation"
     if not cands: return L(RSACandidate(id=str(uuid.uuid4()), loop_id=loop_id, prompt=self.task_prompt) for _ in range(self.N))
-    if len(cands) < self.K: raise ValueError(f"Need at least {self.K} candidates, got {len(cands)}")
-    sel_cands = L(combinations(cands, self.K))
-    if len(sel_cands) < self.N: raise ValueError(f"C({len(cands)},{self.K})={len(sel_cands)} combinations is less than N={self.N}")
-    sel_cands = sel_cands.shuffle()[:self.N]
-    return sel_cands.map(lambda x: RSACandidate(id=str(uuid.uuid4()), loop_id=loop_id, prompt=self._agg_prompt(x), parent_ids=L(x).attrgot('id')))
+    sel_cands = L(combinations(cands, self.K)).shuffle()[:self.N]
+    return sel_cands.map(lambda x: RSACandidate(id=str(uuid.uuid4()), loop_id=loop_id, prompt=self._build_agg_prompt(x), parent_ids=L(x).attrgot('id')))
 
 # %% ../nbs/00_core.ipynb #80329d80
 @patch
 def _run_loop(self:RSA, loop_id, pool=None):
     "Execute one loop: generate prompts, call LLM in parallel, attach responses"
     prompts = self.get_prompts(loop_id, pool)
-    responses = parallel(self._call_llm, prompts.attrgot('prompt'), n_workers=self.n_workers, progress=True)
+    responses = parallel(self._call_llm, prompts.attrgot('prompt'), n_workers=self.n_workers)
     for p, r in zip(prompts, responses): p.response = r
     return prompts
 
@@ -92,20 +91,24 @@ def _run_loop(self:RSA, loop_id, pool=None):
 @patch
 def run(self:RSA):
     "Run the full RSA algorithm for the configured number of loops and return the final candidate pool"
+    pool = None
     pbar = progress_bar(range(self.loops))
     for i in pbar:
         pbar.comment = f"Loop {i+1}"
-        pool = self._run_loop(i, pool if i > 0 else None)
+        pool = self._run_loop(i, pool)
         self.history.extend(pool)
     return pool
 
 # %% ../nbs/00_core.ipynb #72cb9b61
 @patch
-def aggregate(self:RSA, agg_prompt=None, response_model=None):
+def aggregate(self:RSA, method='llm', final_agg_prompt=None, response_format=None):
     "Final aggregation: one LLM call to aggregate all final loop candidates, with optional structured output"
-    agg_prompt = agg_prompt or self.agg_prompt
+    if method.lower() not in ['llm', 'random']: raise ValueError(f"method must be 'llm' or 'random', got {method!r}")
+    if not self.history: self.run()
     candidates = self.history.filter(lambda x: x.loop_id==(self.loops-1))
+    if method.lower() == 'random': return '', candidates.shuffle()[0].response
+    custom_agg_prompt = final_agg_prompt or self.agg_prompt
     responses = '\n'.join(f"---- Candidate {i+1} ----\n{c.response}" for i, c in enumerate(candidates))
-    prompt = f"{agg_prompt}\n{self.task_prompt}\n\nCANDIDATE ANSWERS:\n{responses}\n\nProvide the best aggregated answer:"
-    result = self._call_llm(prompt, **({'response_format': response_model} if response_model else {}))
+    prompt = f"{custom_agg_prompt}\n\nPrompt:\n{self.task_prompt}\n\nCANDIDATE ANSWERS:\n{responses}\n\nProvide the best aggregated answer:"
+    result = self._call_llm(prompt, **({'response_format': response_format} if response_format else {}))
     return prompt, result
